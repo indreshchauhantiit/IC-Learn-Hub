@@ -23,6 +23,7 @@ import InstructorDashboard from "../pages/instructor/InstructorDashboard";
 import InstructorCourses from "../pages/instructor/InstructorCourses";
 import CourseBuilder from "../pages/instructor/CourseBuilder";
 import LectureUpload from "../pages/instructor/LectureUpload";
+import MCQ from "../pages/MCQ/MCQ";
 
 // Error Page
 import NotFound from "../pages/errors/NotFound";
@@ -40,6 +41,7 @@ function AppRoutes() {
       {/* Authentication Pages */}
       <Route path="login" element={<Login />} />
       <Route path="register" element={<Register />} />
+      <Route path="/mcq" element={<MCQ />} />
 
       {/* Student Protected Routes */}
       <Route element={<ProtectedRoute allowedRoles={["student"]} />}>

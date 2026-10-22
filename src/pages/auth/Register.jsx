@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -19,12 +20,16 @@ function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("student");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
 
-    if (!name.trim() || !email.trim()) {
+    const normalizedName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedName || !normalizedEmail) {
       setError("Please enter your name and email address.");
       return;
     }
@@ -39,35 +44,44 @@ function Register() {
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      await register({
-        name: name.trim(),
-        email: email.trim(),
+      const result = register({
+        name: normalizedName,
+        email: normalizedEmail,
+        password,
         role,
       });
 
+      if (!result.success) {
+        setError(
+          result.message || "Unable to create account."
+        );
+        return;
+      }
+
       navigate(
-        role === "instructor"
+        result.user.role === "instructor"
           ? "/instructor/dashboard"
           : "/student/dashboard",
         { replace: true }
       );
     } catch {
       setError("Unable to create account. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-[75vh] bg-slate-50 px-4 py-8 sm:py-12">
       <div className="mx-auto w-full max-w-md">
-
-        {/* Back to Home Button */}
+        {/* Back to Home */}
         <div className="mb-5">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-lg
-            px-3 py-2 text-sm font-semibold text-slate-600
-            transition hover:bg-indigo-50 hover:text-indigo-600"
+            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 transition hover:bg-indigo-50 hover:text-indigo-600"
           >
             <ArrowLeft size={18} />
             Back to Home
@@ -75,13 +89,10 @@ function Register() {
         </div>
 
         {/* Register Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white
-        p-6 shadow-lg sm:p-8">
-
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-lg sm:p-8">
           {/* Logo and Heading */}
           <div className="mb-7 text-center">
-            <div className="mx-auto flex h-14 w-14 items-center
-            justify-center rounded-2xl bg-indigo-100 text-indigo-600">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
               <BookOpen size={28} />
             </div>
 
@@ -95,7 +106,6 @@ function Register() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-
             {/* Full Name */}
             <div>
               <label
@@ -105,16 +115,18 @@ function Register() {
                 Full Name
               </label>
 
-              <div className="flex items-center gap-3 rounded-xl border
-              border-slate-300 px-3 transition focus-within:border-indigo-500
-              focus-within:ring-2 focus-within:ring-indigo-100">
-                <UserRound size={18} className="shrink-0 text-slate-400" />
+              <div className="flex items-center gap-3 rounded-xl border border-slate-300 px-3 transition focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
+                <UserRound
+                  size={18}
+                  className="shrink-0 text-slate-400"
+                />
 
                 <input
                   id="name"
                   type="text"
                   autoComplete="name"
                   required
+                  maxLength={100}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your full name"
@@ -132,10 +144,11 @@ function Register() {
                 Email Address
               </label>
 
-              <div className="flex items-center gap-3 rounded-xl border
-              border-slate-300 px-3 transition focus-within:border-indigo-500
-              focus-within:ring-2 focus-within:ring-indigo-100">
-                <Mail size={18} className="shrink-0 text-slate-400" />
+              <div className="flex items-center gap-3 rounded-xl border border-slate-300 px-3 transition focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
+                <Mail
+                  size={18}
+                  className="shrink-0 text-slate-400"
+                />
 
                 <input
                   id="register-email"
@@ -159,10 +172,11 @@ function Register() {
                 Password
               </label>
 
-              <div className="flex items-center gap-3 rounded-xl border
-              border-slate-300 px-3 transition focus-within:border-indigo-500
-              focus-within:ring-2 focus-within:ring-indigo-100">
-                <LockKeyhole size={18} className="shrink-0 text-slate-400" />
+              <div className="flex items-center gap-3 rounded-xl border border-slate-300 px-3 transition focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
+                <LockKeyhole
+                  size={18}
+                  className="shrink-0 text-slate-400"
+                />
 
                 <input
                   id="register-password"
@@ -196,9 +210,7 @@ function Register() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Enter password again"
-                className="w-full rounded-xl border border-slate-300
-                px-3 py-3 outline-none transition focus:border-indigo-500
-                focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-xl border border-slate-300 px-3 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               />
             </div>
 
@@ -215,9 +227,7 @@ function Register() {
                 id="register-role"
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="w-full rounded-xl border border-slate-300
-                bg-white px-3 py-3 outline-none transition
-                focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-3 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
               >
                 <option value="student">Student</option>
                 <option value="instructor">Instructor</option>
@@ -237,12 +247,10 @@ function Register() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full rounded-xl bg-indigo-600 px-5 py-3
-              font-semibold text-white shadow-sm transition
-              hover:bg-indigo-700 focus:outline-none focus:ring-2
-              focus:ring-indigo-500 focus:ring-offset-2"
+              disabled={isLoading}
+              className="w-full rounded-xl bg-indigo-600 px-5 py-3 font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Create Account
+              {isLoading ? "Creating Account..." : "Create Account"}
             </button>
           </form>
 
@@ -257,10 +265,8 @@ function Register() {
             </Link>
           </p>
 
-          {/* Demo Notice */}
           <p className="mt-5 text-center text-xs leading-5 text-slate-500">
-            Demo registration only. Passwords are not verified or saved,
-            and this is not production authentication.
+            Use your registered email and password to sign in.
           </p>
         </div>
       </div>

@@ -21,6 +21,7 @@ import { useAuth } from "../../context/AuthContext";
 const navLinks = [
   { name: "Home", path: "/" },
   { name: "Courses", path: "/courses" },
+  { name: "MCQ", path: "/mcq" },
 ];
 
 function Header() {

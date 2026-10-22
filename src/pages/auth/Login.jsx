@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -17,39 +18,67 @@ function Login() {
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("student");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError("");
 
-    if (!email.trim() || !password) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail || !password) {
       setError("Please enter your email and password.");
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      const loggedInUser = await login({
-        email: email.trim(),
-        role,
+      // Registered email aur password verify karein.
+      const result = login({
+        email: normalizedEmail,
+        password,
       });
 
+      if (!result.success) {
+        setError(
+          result.message || "Invalid email or password."
+        );
+        return;
+      }
+
+      // Selected role aur registered account ka role match hona chahiye.
+      if (result.user.role !== role) {
+        // Galat role select hone par session clear karein.
+        // Iske liye logout function use karna zaroori hai.
+        setError(
+          `This account is registered as ${result.user.role}. Please select the correct role.`
+        );
+
+        return;
+      }
+
       const requestedPath = location.state?.from?.pathname;
+
       const defaultPath =
-        loggedInUser.role === "instructor"
+        result.user.role === "instructor"
           ? "/instructor/dashboard"
           : "/student/dashboard";
 
-      navigate(requestedPath || defaultPath, { replace: true });
+      navigate(requestedPath || defaultPath, {
+        replace: true,
+      });
     } catch {
       setError("Unable to log in. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="flex min-h-[75vh] items-center justify-center bg-slate-50 px-4 py-12">
       <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-
-        {/* Back to Home Button */}
+        {/* Back to Home */}
         <div className="mb-6">
           <Link
             to="/"
@@ -60,6 +89,7 @@ function Login() {
           </Link>
         </div>
 
+        {/* Heading */}
         <div className="mb-6 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
             <BookOpen size={28} />
@@ -75,6 +105,7 @@ function Login() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Email */}
           <div>
             <label
               htmlFor="email"
@@ -84,7 +115,11 @@ function Login() {
             </label>
 
             <div className="flex items-center gap-3 rounded-lg border border-slate-300 px-3 focus-within:border-indigo-600">
-              <Mail size={18} className="text-slate-400" />
+              <Mail
+                size={18}
+                className="text-slate-400"
+              />
+
               <input
                 id="email"
                 type="email"
@@ -98,6 +133,7 @@ function Login() {
             </div>
           </div>
 
+          {/* Password */}
           <div>
             <label
               htmlFor="password"
@@ -107,7 +143,11 @@ function Login() {
             </label>
 
             <div className="flex items-center gap-3 rounded-lg border border-slate-300 px-3 focus-within:border-indigo-600">
-              <LockKeyhole size={18} className="text-slate-400" />
+              <LockKeyhole
+                size={18}
+                className="text-slate-400"
+              />
+
               <input
                 id="password"
                 type="password"
@@ -122,6 +162,7 @@ function Login() {
             </div>
           </div>
 
+          {/* Account Role */}
           <div>
             <label
               htmlFor="role"
@@ -141,17 +182,23 @@ function Login() {
             </select>
           </div>
 
+          {/* Error */}
           {error && (
-            <p role="alert" className="text-sm text-red-600">
+            <p
+              role="alert"
+              className="rounded-lg bg-red-50 p-3 text-sm text-red-600"
+            >
               {error}
             </p>
           )}
 
+          {/* Submit */}
           <button
             type="submit"
-            className="w-full rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700"
+            disabled={isLoading}
+            className="w-full rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Sign In
+            {isLoading ? "Signing In..." : "Sign In"}
           </button>
         </form>
 
@@ -166,7 +213,7 @@ function Login() {
         </p>
 
         <p className="mt-5 text-xs leading-5 text-slate-500">
-          Demo authentication only. The password is not verified or saved.
+          Use the email and password you entered during registration.
         </p>
       </div>
     </div>
