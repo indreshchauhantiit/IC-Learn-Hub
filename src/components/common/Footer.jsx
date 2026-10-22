@@ -33,13 +33,13 @@ function Footer() {
             <Link to="/" className="mb-4 flex items-center gap-2">
               <BookOpen className="h-7 w-7 text-indigo-400" />
               <span className="text-2xl font-bold text-white">
-                LearnHub
+                IC-LearnHub
               </span>
             </Link>
 
             <p className="max-w-xs text-sm leading-6 text-slate-400">
               Learn new skills, explore your potential,
-              and build your future with LearnHub.
+              and build your future with IC-LearnHub.
             </p>
 
             {/* Social Media */}
@@ -117,17 +117,17 @@ function Footer() {
               Get in touch with our team.
             </p>
             <a
-              href="mailto:support@learnhub.example"
+              href="mailto:support@IC-learnhub.example"
               className="mt-3 inline-block text-sm text-indigo-400 hover:text-indigo-300"
             >
-              support@learnhub.example
+              support@IC-learnhub.example
             </a>
           </div>
         </div>
 
         {/* Copyright */}
         <div className="mt-12 border-t border-slate-800 pt-6 text-center text-sm text-slate-500">
-          © {new Date().getFullYear()} LearnHub. All rights reserved.
+          © {new Date().getFullYear()} IC-LearnHub. All rights reserved.
         </div>
       </div>
     </footer>

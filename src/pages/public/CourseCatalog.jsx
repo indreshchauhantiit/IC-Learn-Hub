@@ -1,90 +1,188 @@
 
-import { useMemo, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
-import { Search, BookOpen, ArrowUpDown } from 'lucide-react';
-import { courses } from '../../data/courses';
-import CourseCard from '../../components/course/CourseCard';
-import CourseFilters from '../../components/course/CourseFilters';
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams, Link } from "react-router-dom";
+import { Search, BookOpen, ArrowUpDown } from "lucide-react";
+
+import { courses as defaultCourses } from "../../data/courses";
+import CourseCard from "../../components/course/CourseCard";
+import CourseFilters from "../../components/course/CourseFilters";
+
+const STORAGE_KEY = "lms-created-courses";
 
 function CourseCatalog() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const initialCategory = searchParams.get('category') || 'All';
-  const initialSearch = searchParams.get('search') || '';
+  const [createdCourses, setCreatedCourses] = useState([]);
 
-  const categories = useMemo(
-    () => [...new Set(courses.map((course) => course.category))],
-    []
-  );
+  const initialSearch = searchParams.get("search") || "";
 
   const [search, setSearch] = useState(initialSearch);
   const [selectedCategory, setSelectedCategory] = useState(
-    initialCategory
+    searchParams.get("category") || "All"
   );
-  const [selectedLevel, setSelectedLevel] = useState('All');
+  const [selectedLevel, setSelectedLevel] = useState("All");
   const [maxPrice, setMaxPrice] = useState(3000);
-  const [sortBy, setSortBy] = useState('popular');
+  const [sortBy, setSortBy] = useState("popular");
+
+  // Load instructor-created courses from localStorage.
+  useEffect(() => {
+    const loadCreatedCourses = () => {
+      try {
+        const storedData = localStorage.getItem(STORAGE_KEY);
+        const parsedData = storedData ? JSON.parse(storedData) : [];
+
+        if (!Array.isArray(parsedData)) {
+          throw new Error("Saved courses must be an array.");
+        }
+
+        // Only published instructor courses appear in the student catalog.
+        setCreatedCourses(
+          parsedData.filter(
+            (course) =>
+              course &&
+              course.id != null &&
+              course.status === "published"
+          )
+        );
+      } catch (error) {
+        console.error("Unable to load instructor courses:", error);
+        setCreatedCourses([]);
+      }
+    };
+
+    loadCreatedCourses();
+
+    // Update if localStorage changes in another browser tab.
+    window.addEventListener("storage", loadCreatedCourses);
+
+    return () => {
+      window.removeEventListener("storage", loadCreatedCourses);
+    };
+  }, []);
+
+  // Merge built-in courses and instructor-created courses without
+  // duplicating courses that share the same ID.
+  const allCourses = useMemo(() => {
+    const combinedCourses = [...defaultCourses];
+    const existingIds = new Set(
+      combinedCourses.map((course) => String(course.id))
+    );
+
+    createdCourses.forEach((course) => {
+      const courseId = String(course.id);
+
+      if (!existingIds.has(courseId)) {
+        combinedCourses.push(course);
+        existingIds.add(courseId);
+      }
+    });
+
+    return combinedCourses;
+  }, [createdCourses]);
+
+  // Build categories from both built-in and instructor-created courses.
+  const categories = useMemo(
+    () => [
+      ...new Set(
+        allCourses
+          .map((course) => course.category)
+          .filter(Boolean)
+      ),
+    ],
+    [allCourses]
+  );
+
+  // Keep URL search and category parameters in sync.
+  useEffect(() => {
+    const urlSearch = searchParams.get("search") || "";
+    const urlCategory = searchParams.get("category") || "All";
+
+    setSearch(urlSearch);
+    setSelectedCategory(
+      urlCategory === "All" || categories.includes(urlCategory)
+        ? urlCategory
+        : "All"
+    );
+  }, [searchParams, categories]);
 
   const filteredCourses = useMemo(() => {
-    let result = [...courses];
+    let result = [...allCourses];
 
-    // Search
-    if (search.trim()) {
-      const query = search.toLowerCase().trim();
+    // Search by title, instructor, category, or subtitle.
+    const query = search.trim().toLowerCase();
 
+    if (query) {
       result = result.filter((course) =>
         [
           course.title,
+          course.subtitle,
           course.instructor,
           course.category,
-        ].some((value) => value.toLowerCase().includes(query))
+        ].some((value) =>
+          String(value || "").toLowerCase().includes(query)
+        )
       );
     }
 
-    // Category
-    if (selectedCategory !== 'All') {
+    // Category filter.
+    if (selectedCategory !== "All") {
       result = result.filter(
         (course) => course.category === selectedCategory
       );
     }
 
-    // Difficulty
-    if (selectedLevel !== 'All') {
+    // Difficulty filter.
+    if (selectedLevel !== "All") {
       result = result.filter(
         (course) => course.level === selectedLevel
       );
     }
 
-    // Price
+    // Maximum price filter.
     result = result.filter(
-      (course) => course.price <= maxPrice
+      (course) =>
+        Number.isFinite(Number(course.price)) &&
+        Number(course.price) <= maxPrice
     );
 
-    // Sorting
+    // Sorting.
     switch (sortBy) {
-      case 'rating':
-        result.sort((a, b) => b.rating - a.rating);
+      case "rating":
+        result.sort(
+          (a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0)
+        );
         break;
 
-      case 'price-low':
-        result.sort((a, b) => a.price - b.price);
+      case "price-low":
+        result.sort(
+          (a, b) => (Number(a.price) || 0) - (Number(b.price) || 0)
+        );
         break;
 
-      case 'price-high':
-        result.sort((a, b) => b.price - a.price);
+      case "price-high":
+        result.sort(
+          (a, b) => (Number(b.price) || 0) - (Number(a.price) || 0)
+        );
         break;
 
-      case 'name':
-        result.sort((a, b) => a.title.localeCompare(b.title));
+      case "name":
+        result.sort((a, b) =>
+          String(a.title || "").localeCompare(String(b.title || ""))
+        );
         break;
 
-      case 'popular':
+      case "popular":
       default:
-        result.sort((a, b) => b.students - a.students);
+        result.sort(
+          (a, b) =>
+            (Number(b.students) || 0) - (Number(a.students) || 0)
+        );
+        break;
     }
 
     return result;
   }, [
+    allCourses,
     search,
     selectedCategory,
     selectedLevel,
@@ -92,34 +190,40 @@ function CourseCatalog() {
     sortBy,
   ]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
+  const handleSearch = (event) => {
+    event.preventDefault();
 
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(searchParams);
 
     if (search.trim()) {
-      params.set('search', search.trim());
+      params.set("search", search.trim());
+    } else {
+      params.delete("search");
     }
 
-    if (selectedCategory !== 'All') {
-      params.set('category', selectedCategory);
+    if (
+      selectedCategory !== "All" &&
+      categories.includes(selectedCategory)
+    ) {
+      params.set("category", selectedCategory);
+    } else {
+      params.delete("category");
     }
 
     setSearchParams(params);
   };
 
   const clearFilters = () => {
-    setSearch('');
-    setSelectedCategory('All');
-    setSelectedLevel('All');
+    setSearch("");
+    setSelectedCategory("All");
+    setSelectedLevel("All");
     setMaxPrice(3000);
-    setSortBy('popular');
+    setSortBy("popular");
     setSearchParams({});
   };
 
   return (
     <div className="min-h-screen bg-slate-50">
-
       {/* Page Header */}
       <section className="bg-gradient-to-r from-indigo-700 to-purple-700 px-4 py-14 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
@@ -150,8 +254,9 @@ function CourseCatalog() {
             <input
               type="search"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(event) => setSearch(event.target.value)}
               placeholder="Search courses, instructors..."
+              aria-label="Search courses and instructors"
               className="min-w-0 flex-1 px-2 py-3 text-sm text-slate-800 outline-none"
             />
 
@@ -168,7 +273,6 @@ function CourseCatalog() {
       {/* Catalog Content */}
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-4">
-
           {/* Sidebar Filters */}
           <div className="lg:sticky lg:top-24">
             <CourseFilters
@@ -190,8 +294,9 @@ function CourseCatalog() {
                 <h2 className="text-xl font-bold text-slate-900">
                   All Courses
                 </h2>
+
                 <p className="mt-1 text-sm text-slate-500">
-                  Showing {filteredCourses.length} of {courses.length} courses
+                  Showing {filteredCourses.length} of {allCourses.length} courses
                 </p>
               </div>
 
@@ -211,7 +316,7 @@ function CourseCatalog() {
                 <select
                   id="sort"
                   value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  onChange={(event) => setSortBy(event.target.value)}
                   className="min-w-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-indigo-500"
                 >
                   <option value="popular">Most Popular</option>
@@ -226,10 +331,7 @@ function CourseCatalog() {
             {filteredCourses.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredCourses.map((course) => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                  />
+                  <CourseCard key={course.id} course={course} />
                 ))}
               </div>
             ) : (

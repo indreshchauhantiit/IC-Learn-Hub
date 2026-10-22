@@ -1,74 +1,271 @@
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  BookOpen,
+  UserRound,
+  Mail,
+  LockKeyhole,
+  ArrowLeft,
+} from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
-import React, { useState } from "react";
+function Register() {
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
-const Register = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("student");
+  const [error, setError] = useState("");
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
+    setError("");
+
+    if (!name.trim() || !email.trim()) {
+      setError("Please enter your name and email address.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must contain at least 6 characters.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    try {
+      await register({
+        name: name.trim(),
+        email: email.trim(),
+        role,
+      });
+
+      navigate(
+        role === "instructor"
+          ? "/instructor/dashboard"
+          : "/student/dashboard",
+        { replace: true }
+      );
+    } catch {
+      setError("Unable to create account. Please try again.");
+    }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-md rounded-xl bg-white p-8 shadow"
-      >
-        <h1 className="mb-6 text-center text-2xl font-bold">
-          Create Account
-        </h1>
+    <div className="min-h-[75vh] bg-slate-50 px-4 py-8 sm:py-12">
+      <div className="mx-auto w-full max-w-md">
 
-        <input
-          type="text"
-          name="name"
-          placeholder="Full Name"
-          value={formData.name}
-          onChange={handleChange}
-          className="mb-4 w-full rounded border p-3"
-          required
-        />
+        {/* Back to Home Button */}
+        <div className="mb-5">
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 rounded-lg
+            px-3 py-2 text-sm font-semibold text-slate-600
+            transition hover:bg-indigo-50 hover:text-indigo-600"
+          >
+            <ArrowLeft size={18} />
+            Back to Home
+          </Link>
+        </div>
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email Address"
-          value={formData.email}
-          onChange={handleChange}
-          className="mb-4 w-full rounded border p-3"
-          required
-        />
+        {/* Register Card */}
+        <div className="rounded-2xl border border-slate-200 bg-white
+        p-6 shadow-lg sm:p-8">
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="mb-4 w-full rounded border p-3"
-          required
-        />
+          {/* Logo and Heading */}
+          <div className="mb-7 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center
+            justify-center rounded-2xl bg-indigo-100 text-indigo-600">
+              <BookOpen size={28} />
+            </div>
 
-        <button
-          type="submit"
-          className="w-full rounded bg-blue-600 p-3 text-white hover:bg-blue-700"
-        >
-          Register
-        </button>
-      </form>
+            <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-900">
+              Create Account
+            </h1>
+
+            <p className="mt-2 text-sm text-slate-500">
+              Join us and start learning today.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Full Name */}
+            <div>
+              <label
+                htmlFor="name"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                Full Name
+              </label>
+
+              <div className="flex items-center gap-3 rounded-xl border
+              border-slate-300 px-3 transition focus-within:border-indigo-500
+              focus-within:ring-2 focus-within:ring-indigo-100">
+                <UserRound size={18} className="shrink-0 text-slate-400" />
+
+                <input
+                  id="name"
+                  type="text"
+                  autoComplete="name"
+                  required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your full name"
+                  className="w-full bg-transparent py-3 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Email Address */}
+            <div>
+              <label
+                htmlFor="register-email"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                Email Address
+              </label>
+
+              <div className="flex items-center gap-3 rounded-xl border
+              border-slate-300 px-3 transition focus-within:border-indigo-500
+              focus-within:ring-2 focus-within:ring-indigo-100">
+                <Mail size={18} className="shrink-0 text-slate-400" />
+
+                <input
+                  id="register-email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full bg-transparent py-3 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label
+                htmlFor="register-password"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                Password
+              </label>
+
+              <div className="flex items-center gap-3 rounded-xl border
+              border-slate-300 px-3 transition focus-within:border-indigo-500
+              focus-within:ring-2 focus-within:ring-indigo-100">
+                <LockKeyhole size={18} className="shrink-0 text-slate-400" />
+
+                <input
+                  id="register-password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 6 characters"
+                  className="w-full bg-transparent py-3 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label
+                htmlFor="confirm-password"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                Confirm Password
+              </label>
+
+              <input
+                id="confirm-password"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={6}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Enter password again"
+                className="w-full rounded-xl border border-slate-300
+                px-3 py-3 outline-none transition focus:border-indigo-500
+                focus:ring-2 focus:ring-indigo-100"
+              />
+            </div>
+
+            {/* Account Type */}
+            <div>
+              <label
+                htmlFor="register-role"
+                className="mb-2 block text-sm font-medium text-slate-700"
+              >
+                Account Type
+              </label>
+
+              <select
+                id="register-role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full rounded-xl border border-slate-300
+                bg-white px-3 py-3 outline-none transition
+                focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+              >
+                <option value="student">Student</option>
+                <option value="instructor">Instructor</option>
+              </select>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <p
+                role="alert"
+                className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600"
+              >
+                {error}
+              </p>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full rounded-xl bg-indigo-600 px-5 py-3
+              font-semibold text-white shadow-sm transition
+              hover:bg-indigo-700 focus:outline-none focus:ring-2
+              focus:ring-indigo-500 focus:ring-offset-2"
+            >
+              Create Account
+            </button>
+          </form>
+
+          {/* Login Link */}
+          <p className="mt-6 text-center text-sm text-slate-600">
+            Already have an account?{" "}
+            <Link
+              to="/login"
+              className="font-semibold text-indigo-600 hover:underline"
+            >
+              Sign In
+            </Link>
+          </p>
+
+          {/* Demo Notice */}
+          <p className="mt-5 text-center text-xs leading-5 text-slate-500">
+            Demo registration only. Passwords are not verified or saved,
+            and this is not production authentication.
+          </p>
+        </div>
+      </div>
     </div>
   );
-};
+}
 
 export default Register;

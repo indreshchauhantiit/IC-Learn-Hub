@@ -1,5 +1,5 @@
 
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import {
   ShoppingCart,
   PlayCircle,
@@ -7,10 +7,16 @@ import {
   Clock,
   Download,
   Award,
-} from 'lucide-react';
+} from "lucide-react";
+import { useCart } from "../../context/CartContext";
 
 function EnrollmentCard({ course }) {
   const navigate = useNavigate();
+  const { addToCart, cartItems } = useCart();
+
+  const isAdded = cartItems.some(
+    (item) => String(item.id) === String(course.id)
+  );
 
   const discount = course.originalPrice
     ? Math.round(
@@ -21,8 +27,14 @@ function EnrollmentCard({ course }) {
     : 0;
 
   const handleAddToCart = () => {
-    navigate('/student/cart', {
-      state: { course },
+    addToCart(course);
+    navigate("/student/cart");
+  };
+
+  const handleEnrollNow = () => {
+    addToCart(course);
+    navigate("/student/cart", {
+      state: { checkout: true },
     });
   };
 
@@ -45,12 +57,12 @@ function EnrollmentCard({ course }) {
       <div className="p-6">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-3xl font-bold text-slate-900">
-            ₹{course.price}
+            ₹{Number(course.price).toLocaleString("en-IN")}
           </span>
 
           {course.originalPrice && (
             <span className="text-lg text-slate-400 line-through">
-              ₹{course.originalPrice}
+              ₹{Number(course.originalPrice).toLocaleString("en-IN")}
             </span>
           )}
 
@@ -62,7 +74,7 @@ function EnrollmentCard({ course }) {
         </div>
 
         <p className="mt-2 text-center text-xs text-slate-500">
-          Mock pricing for frontend demonstration
+          Demo pricing — real payment is not connected
         </p>
 
         <div className="mt-5 space-y-3">
@@ -72,16 +84,16 @@ function EnrollmentCard({ course }) {
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700"
           >
             <ShoppingCart size={18} />
-            Add to Cart
+            {isAdded ? "View Cart" : "Add to Cart"}
           </button>
 
-          <Link
-            to="/student/cart"
-            state={{ course, checkout: true }}
+          <button
+            type="button"
+            onClick={handleEnrollNow}
             className="flex w-full items-center justify-center gap-2 rounded-lg border border-indigo-600 px-5 py-3 font-semibold text-indigo-600 transition hover:bg-indigo-50"
           >
             Enroll Now
-          </Link>
+          </button>
         </div>
 
         <p className="mt-4 text-center text-xs text-slate-500">

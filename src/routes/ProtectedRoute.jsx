@@ -1,22 +1,28 @@
 
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-// Temporary mock authentication
-const mockUser = {
-  isAuthenticated: true,
-  role: 'student',
-};
+function ProtectedRoute({ allowedRoles = [] }) {
+  const { user, isAuthenticated } = useAuth();
+  const location = useLocation();
 
-function ProtectedRoute({ allowedRoles }) {
-  if (!mockUser.isAuthenticated) {
-    return <Navigate to="/login" replace />;
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location }}
+      />
+    );
   }
 
-  if (
-    allowedRoles &&
-    !allowedRoles.includes(mockUser.role)
-  ) {
-    return <Navigate to="/" replace />;
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
+    const homePath =
+      user.role === "instructor"
+        ? "/instructor/dashboard"
+        : "/student/dashboard";
+
+    return <Navigate to={homePath} replace />;
   }
 
   return <Outlet />;
