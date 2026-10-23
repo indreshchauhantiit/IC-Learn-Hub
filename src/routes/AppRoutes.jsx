@@ -7,6 +7,7 @@ import PublicLayout from "../layouts/PublicLayout";
 import Home from "../pages/public/Home";
 import CourseCatalog from "../pages/public/CourseCatalog";
 import CourseDetail from "../pages/public/CourseDetail";
+import MCQ from "../pages/MCQ/MCQ";
 
 // Auth Pages
 import Login from "../pages/auth/Login";
@@ -23,7 +24,6 @@ import InstructorDashboard from "../pages/instructor/InstructorDashboard";
 import InstructorCourses from "../pages/instructor/InstructorCourses";
 import CourseBuilder from "../pages/instructor/CourseBuilder";
 import LectureUpload from "../pages/instructor/LectureUpload";
-import MCQ from "../pages/MCQ/MCQ";
 
 // Error Page
 import NotFound from "../pages/errors/NotFound";
@@ -34,14 +34,34 @@ function AppRoutes() {
       {/* Public Pages */}
       <Route element={<PublicLayout />}>
         <Route index element={<Home />} />
-        <Route path="courses" element={<CourseCatalog />} />
-        <Route path="courses/:courseId" element={<CourseDetail />} />
+
+        <Route
+          path="courses"
+          element={<CourseCatalog />}
+        />
+
+        <Route
+          path="courses/:courseId"
+          element={<CourseDetail />}
+        />
+
+        {/* MCQ Page */}
+        <Route
+          path="mcq"
+          element={<MCQ />}
+        />
       </Route>
 
       {/* Authentication Pages */}
-      <Route path="login" element={<Login />} />
-      <Route path="register" element={<Register />} />
-      <Route path="/mcq" element={<MCQ />} />
+      <Route
+        path="login"
+        element={<Login />}
+      />
+
+      <Route
+        path="register"
+        element={<Register />}
+      />
 
       {/* Student Protected Routes */}
       <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
@@ -68,25 +88,21 @@ function AppRoutes() {
 
       {/* Instructor Protected Routes */}
       <Route element={<ProtectedRoute allowedRoles={["instructor"]} />}>
-        {/* Instructor Dashboard */}
         <Route
           path="instructor/dashboard"
           element={<InstructorDashboard />}
         />
 
-        {/* Manage Courses - Course List */}
         <Route
           path="instructor/courses"
           element={<InstructorCourses />}
         />
 
-        {/* Create a Course - Form */}
         <Route
           path="instructor/courses/manage"
           element={<CourseBuilder />}
         />
 
-        {/* Manage Course Lectures */}
         <Route
           path="instructor/courses/:courseId/lectures"
           element={<LectureUpload />}
@@ -94,7 +110,10 @@ function AppRoutes() {
       </Route>
 
       {/* 404 Page */}
-      <Route path="*" element={<NotFound />} />
+      <Route
+        path="*"
+        element={<NotFound />}
+      />
     </Routes>
   );
 }

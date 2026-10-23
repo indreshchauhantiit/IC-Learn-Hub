@@ -1,7 +1,7 @@
 
 import { Link, useNavigate } from "react-router-dom";
 import { Trash2, BookOpen, ArrowLeft, ShieldCheck } from "lucide-react";
-import { useCart } from "../../context/CartContext";
+import { useCart } from "../../context/useCart";
 import { useEnrollments } from "../../context/EnrollmentContext";
 
 const getPrice = (price) => {

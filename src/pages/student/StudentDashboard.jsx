@@ -36,11 +36,20 @@ const StudentDashboard = () => {
       ...enrolledCourse,
     };
 
-    const totalLessons = (course.curriculum || []).reduce(
+    const totalLessons = Array.isArray(course.curriculum)
+  ? course.curriculum.reduce(
       (total, section) =>
-        total + (section.lectures || []).length,
+        total +
+        (Array.isArray(section?.lectures)
+          ? section.lectures.length
+          : 0),
       0
-    );
+    )
+  : 0;
+
+const completedCount = Array.isArray(course.completedLessons)
+  ? new Set(course.completedLessons.map(String)).size
+  : 0;
 
     return {
       ...course,

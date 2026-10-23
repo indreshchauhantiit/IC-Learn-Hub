@@ -132,10 +132,9 @@ function CourseDetail() {
     "Basic computer knowledge",
   ];
 
-  const curriculum =
-    Array.isArray(course.curriculum) && course.curriculum.length > 0
-      ? course.curriculum
-      : defaultCurriculum;
+  const curriculum = Array.isArray(course.curriculum)
+  ? course.curriculum
+  : [];
 
   const rating = Number(course.rating || 0);
   const studentCount = Number(course.students || 0);

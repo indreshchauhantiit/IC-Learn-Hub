@@ -8,7 +8,7 @@ import {
   Download,
   Award,
 } from "lucide-react";
-import { useCart } from "../../context/CartContext";
+import { useCart } from "../../context/useCart";
 
 function EnrollmentCard({ course }) {
   const navigate = useNavigate();

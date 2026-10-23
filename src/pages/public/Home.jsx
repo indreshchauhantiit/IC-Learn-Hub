@@ -96,7 +96,7 @@ function Home() {
   const featuredCourses = courses.slice(0, 4);
 
   return (
-    <main className="overflow-hidden bg-white text-slate-900">
+    <div className="overflow-hidden bg-white text-slate-900">
 
       {/* HERO SECTION */}
       <section className="relative isolate overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-violet-50">
@@ -729,7 +729,7 @@ function Home() {
           </div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }
 
